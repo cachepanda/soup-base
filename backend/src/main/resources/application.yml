@@ -19,3 +19,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+clerk:
+  jwks-url: ${CLERK_JWKS_URL:https://your-clerk-domain.clerk.accounts.dev/.well-known/jwks.json}
+  issuer: ${CLERK_ISSUER:https://your-clerk-domain.clerk.accounts.dev}
