@@ -35,6 +35,7 @@ dependencies {
     implementation("software.amazon.awssdk:secretsmanager")
     runtimeOnly("org.postgresql:postgresql")
     jooqGenerator("org.postgresql:postgresql")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.19.15")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
@@ -46,5 +47,33 @@ tasks.withType<Test> {
 
 jooq {
     version.set("3.19.15")
-    // codegen configurations added in task 0.5
+    configurations {
+        create("main") {
+            generateSchemaSourceOnCompilation.set(true)
+            jooqConfiguration.apply {
+                generator.apply {
+                    database.apply {
+                        name = "org.jooq.meta.extensions.ddl.DDLDatabase"
+                        properties.add(org.jooq.meta.jaxb.Property().apply {
+                            key = "scripts"
+                            value = "src/main/resources/db/migration/*.sql"
+                        })
+                        properties.add(org.jooq.meta.jaxb.Property().apply {
+                            key = "sort"
+                            value = "flyway"
+                        })
+                    }
+                    generate.apply {
+                        isDeprecated = false
+                        isRecords = true
+                        isFluentSetters = true
+                    }
+                    target.apply {
+                        packageName = "dev.soupbase.db.generated"
+                        directory = "src/main/generated"
+                    }
+                }
+            }
+        }
+    }
 }

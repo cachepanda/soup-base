@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+backend/.gradle/
+backend/build/
+
+# jOOQ generated sources (regenerated at build time)
+backend/src/main/generated/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# Environment
+.env
+.env.local
