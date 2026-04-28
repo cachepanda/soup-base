@@ -28,14 +28,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.jooq:jooq:3.19.15")
+    implementation("org.jooq:jooq:3.19.22")
     implementation("org.flywaydb:flyway-core:10.21.0")
     implementation("org.flywaydb:flyway-database-postgresql:10.21.0")
     implementation("com.auth0:java-jwt:4.4.0")
     implementation("software.amazon.awssdk:secretsmanager")
     runtimeOnly("org.postgresql:postgresql")
     jooqGenerator("org.postgresql:postgresql")
-    jooqGenerator("org.jooq:jooq-meta-extensions:3.19.15")
+    jooqGenerator("org.jooq:jooq-meta-extensions:3.19.22")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:junit-jupiter")
@@ -46,7 +46,7 @@ tasks.withType<Test> {
 }
 
 jooq {
-    version.set("3.19.15")
+    version.set("3.19.22")
     configurations {
         create("main") {
             generateSchemaSourceOnCompilation.set(true)
