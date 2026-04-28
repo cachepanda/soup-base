@@ -13,8 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -47,7 +47,7 @@ public class ClerkJwtFilter extends OncePerRequestFilter {
 
     private final String jwksUrl;
     private final String issuer;
-    private final RequestMappingHandlerMapping handlerMapping;
+    private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
     // Replaced atomically on JWKS refresh; individual entries are never mutated.
@@ -56,11 +56,11 @@ public class ClerkJwtFilter extends OncePerRequestFilter {
     public ClerkJwtFilter(
             @Value("${clerk.jwks-url}") String jwksUrl,
             @Value("${clerk.issuer}") String issuer,
-            @Lazy RequestMappingHandlerMapping handlerMapping,
+            ApplicationContext applicationContext,
             ObjectMapper objectMapper) {
         this.jwksUrl = jwksUrl;
         this.issuer = issuer;
-        this.handlerMapping = handlerMapping;
+        this.applicationContext = applicationContext;
         this.objectMapper = objectMapper;
     }
 
@@ -111,6 +111,8 @@ public class ClerkJwtFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(HttpServletRequest request) {
         try {
+            RequestMappingHandlerMapping handlerMapping =
+                    applicationContext.getBean(RequestMappingHandlerMapping.class);
             HandlerExecutionChain chain = handlerMapping.getHandler(request);
             if (chain != null && chain.getHandler() instanceof HandlerMethod method) {
                 return method.hasMethodAnnotation(PublicEndpoint.class)
