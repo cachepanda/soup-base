@@ -1,11 +1,11 @@
 -- V1__init.sql: control-plane schema (users + databases)
 
 CREATE TABLE users (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    clerk_id    TEXT        NOT NULL UNIQUE,
-    email       TEXT        NOT NULL,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    clerk_id    VARCHAR(255) NOT NULL UNIQUE,
+    email       VARCHAR(255) NOT NULL,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_users_clerk_id ON users (clerk_id);
@@ -21,9 +21,9 @@ CREATE TYPE database_status AS ENUM (
 CREATE TABLE databases (
     id                UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id           UUID            NOT NULL REFERENCES users(id),
-    name              TEXT            NOT NULL,
-    pg_database_name  TEXT            NOT NULL UNIQUE,
-    pg_username       TEXT            NOT NULL UNIQUE,
+    name              VARCHAR(63)     NOT NULL,
+    pg_database_name  VARCHAR(63)     NOT NULL UNIQUE,
+    pg_username       VARCHAR(63)     NOT NULL UNIQUE,
     pg_password_hash  TEXT            NOT NULL,
     status            database_status NOT NULL DEFAULT 'PROVISIONING',
     failure_reason    TEXT,
