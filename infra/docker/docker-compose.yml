@@ -1,0 +1,53 @@
+services:
+  control-plane-db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: soupbase
+      POSTGRES_USER: soupbase
+      POSTGRES_PASSWORD: localdev
+    volumes:
+      - control_plane_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soupbase -d soupbase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  hosted-cluster-db:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: sb_admin
+      POSTGRES_PASSWORD: localdev
+      # Trust auth lets provisioned users connect without pre-seeding PgBouncer's userlist
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - hosted_cluster_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sb_admin -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    ports:
+      - "6432:5432"
+    environment:
+      DB_HOST: hosted-cluster-db
+      DB_PORT: 5432
+      POOL_MODE: transaction
+      AUTH_TYPE: trust
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: 20
+    depends_on:
+      hosted-cluster-db:
+        condition: service_healthy
+
+volumes:
+  control_plane_data:
+  hosted_cluster_data:
