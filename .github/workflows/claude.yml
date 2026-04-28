@@ -19,7 +19,7 @@ jobs:
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
-      (github.event_name == 'check_run' && github.event.check_run.conclusion == 'failure' && contains(fromJSON('["Backend CI", "Frontend CI"]'), github.event.check_run.name) && github.event.check_run.sender.login != 'claude[bot]')
+      (github.event_name == 'check_run' && github.event.check_run.conclusion == 'failure' && contains(fromJSON('["Build and Test", "Lint and Build"]'), github.event.check_run.name) && github.event.check_run.app.slug != 'claude')
     runs-on: ubuntu-latest
     permissions:
       contents: write        # push branches
