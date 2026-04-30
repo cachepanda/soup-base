@@ -6,6 +6,8 @@ import dev.soupbase.db.generated.tables.records.DatabasesRecord;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -50,6 +52,22 @@ public class DatabaseRepository {
                 "Insert did not return a record for database id: " + id
         );
         return toDatabase(record);
+    }
+
+    public void updateStatus(UUID id, DatabaseStatus status, String failureReason) {
+        dsl.update(DATABASES)
+                .set(DATABASES.STATUS, dev.soupbase.db.generated.enums.DatabaseStatus.valueOf(status.name()))
+                .set(DATABASES.FAILURE_REASON, failureReason)
+                .set(DATABASES.UPDATED_AT, OffsetDateTime.now())
+                .where(DATABASES.ID.eq(id))
+                .execute();
+    }
+
+    public List<Database> findStuckInProvisioning(OffsetDateTime cutoff) {
+        return dsl.selectFrom(DATABASES)
+                .where(DATABASES.STATUS.eq(PROVISIONING))
+                .and(DATABASES.CREATED_AT.lt(cutoff))
+                .fetch(DatabaseRepository::toDatabase);
     }
 
     private static Database toDatabase(DatabasesRecord r) {
