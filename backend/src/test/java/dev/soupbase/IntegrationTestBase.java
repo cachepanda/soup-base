@@ -38,11 +38,20 @@ public abstract class IntegrationTestBase {
             .withUsername("soupbase")
             .withPassword("test");
 
+    @Container
+    static final PostgreSQLContainer<?> hostedCluster = new PostgreSQLContainer<>("postgres:16")
+            .withDatabaseName("postgres")
+            .withUsername("postgres")
+            .withPassword("test");
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", controlPlane::getJdbcUrl);
         registry.add("spring.datasource.username", controlPlane::getUsername);
         registry.add("spring.datasource.password", controlPlane::getPassword);
+        registry.add("hosted-cluster.datasource.url", hostedCluster::getJdbcUrl);
+        registry.add("hosted-cluster.datasource.username", hostedCluster::getUsername);
+        registry.add("hosted-cluster.datasource.password", hostedCluster::getPassword);
         registry.add("clerk.jwks-url", () -> "https://test.clerk.dev/.well-known/jwks.json");
         registry.add("clerk.issuer", () -> "https://test.clerk.dev");
     }

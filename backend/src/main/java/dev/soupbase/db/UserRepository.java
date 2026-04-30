@@ -6,6 +6,7 @@ import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static dev.soupbase.db.generated.Tables.USERS;
 
@@ -16,6 +17,13 @@ public class UserRepository {
 
     public UserRepository(DSLContext dsl) {
         this.dsl = dsl;
+    }
+
+    public Optional<User> findByClerkId(String clerkId) {
+        UsersRecord record = dsl.selectFrom(USERS)
+                .where(USERS.CLERK_ID.eq(clerkId))
+                .fetchOne();
+        return Optional.ofNullable(record).map(UserRepository::toUser);
     }
 
     public User findOrCreate(String clerkId, String email) {

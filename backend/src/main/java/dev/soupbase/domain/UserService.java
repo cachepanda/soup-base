@@ -4,6 +4,8 @@ import dev.soupbase.db.UserRepository;
 import dev.soupbase.domain.model.User;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
 
@@ -11,6 +13,10 @@ public class UserService {
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public Optional<User> findByClerkId(String clerkId) {
+        return userRepository.findByClerkId(clerkId);
     }
 
     public User findOrCreate(String clerkId, String email) {
