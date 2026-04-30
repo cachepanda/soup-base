@@ -4,6 +4,7 @@ import dev.soupbase.domain.model.Database;
 import dev.soupbase.domain.model.DatabaseStatus;
 import dev.soupbase.db.generated.tables.records.DatabasesRecord;
 import org.jooq.DSLContext;
+import org.jooq.Record2;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
@@ -41,17 +42,27 @@ public class DatabaseRepository {
 
     public Database insert(UUID id, UUID userId, String name, String pgDatabaseName,
                            String pgUsername, String pgPasswordHash) {
-        DatabasesRecord record = Objects.requireNonNull(
-                dsl.insertInto(DATABASES)
-                        .columns(DATABASES.ID, DATABASES.USER_ID, DATABASES.NAME,
-                                DATABASES.PG_DATABASE_NAME, DATABASES.PG_USERNAME,
-                                DATABASES.PG_PASSWORD_HASH, DATABASES.STATUS)
-                        .values(id, userId, name, pgDatabaseName, pgUsername, pgPasswordHash, PROVISIONING)
-                        .returning()
+        dsl.insertInto(DATABASES)
+                .columns(DATABASES.ID, DATABASES.USER_ID, DATABASES.NAME,
+                        DATABASES.PG_DATABASE_NAME, DATABASES.PG_USERNAME,
+                        DATABASES.PG_PASSWORD_HASH, DATABASES.STATUS)
+                .values(id, userId, name, pgDatabaseName, pgUsername, pgPasswordHash, PROVISIONING)
+                .execute();
+
+        // Fetch only the DB-generated timestamp columns to avoid jOOQ enum binding
+        // issues with PostgreSQL custom types (database_status) in DDL-generated code.
+        Record2<OffsetDateTime, OffsetDateTime> timestamps = Objects.requireNonNull(
+                dsl.select(DATABASES.CREATED_AT, DATABASES.UPDATED_AT)
+                        .from(DATABASES)
+                        .where(DATABASES.ID.eq(id))
                         .fetchOne(),
-                "Insert did not return a record for database id: " + id
+                "Database record not found after insert: " + id
         );
-        return toDatabase(record);
+
+        return new Database(id, userId, name, pgDatabaseName, pgUsername, pgPasswordHash,
+                DatabaseStatus.PROVISIONING, null,
+                timestamps.get(DATABASES.CREATED_AT),
+                timestamps.get(DATABASES.UPDATED_AT));
     }
 
     public void updateStatus(UUID id, DatabaseStatus status, String failureReason) {
