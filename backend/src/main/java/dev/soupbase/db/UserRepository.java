@@ -41,7 +41,7 @@ public class UserRepository {
         ));
     }
 
-    private User toUser(UsersRecord r) {
+    private static User toUser(UsersRecord r) {
         return new User(r.getId(), r.getClerkId(), r.getEmail(), r.getCreatedAt(), r.getUpdatedAt());
     }
 }
