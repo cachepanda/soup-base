@@ -40,9 +40,11 @@ public class DatabaseService {
     private static final PasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     private final DatabaseRepository databaseRepository;
+    private final ProvisioningService provisioningService;
 
-    public DatabaseService(DatabaseRepository databaseRepository) {
+    public DatabaseService(DatabaseRepository databaseRepository, ProvisioningService provisioningService) {
         this.databaseRepository = databaseRepository;
+        this.provisioningService = provisioningService;
     }
 
     public Result<Database> createDatabase(User user, String requestedName) {
@@ -79,6 +81,8 @@ public class DatabaseService {
 
         Database database = databaseRepository.insert(
                 dbId, user.id(), name, pgDatabaseName, pgUsername, pgPasswordHash);
+
+        provisioningService.provision(database, password);
 
         return new Result.Ok<>(database);
     }
