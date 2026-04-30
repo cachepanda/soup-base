@@ -20,6 +20,12 @@ management:
     health:
       show-details: always
 
+hosted-cluster:
+  datasource:
+    url: ${HOSTED_CLUSTER_DB_URL:jdbc:postgresql://localhost:5433/postgres}
+    username: ${HOSTED_CLUSTER_DB_USERNAME:postgres}
+    password: ${HOSTED_CLUSTER_DB_PASSWORD:postgres}
+
 clerk:
   jwks-url: ${CLERK_JWKS_URL:https://your-clerk-domain.clerk.accounts.dev/.well-known/jwks.json}
   issuer: ${CLERK_ISSUER:https://your-clerk-domain.clerk.accounts.dev}
