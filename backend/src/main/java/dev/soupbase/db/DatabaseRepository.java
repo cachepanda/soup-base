@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static dev.soupbase.db.generated.Tables.DATABASES;
-import static dev.soupbase.db.generated.enums.DatabaseStatus.PROVISIONING;
 
 @Repository
 public class DatabaseRepository {
@@ -28,7 +27,7 @@ public class DatabaseRepository {
         return dsl.selectCount()
                 .from(DATABASES)
                 .where(DATABASES.USER_ID.eq(userId))
-                .and(DATABASES.STATUS.ne(dev.soupbase.db.generated.enums.DatabaseStatus.DELETED))
+                .and(DATABASES.STATUS.cast(String.class).ne("DELETED"))
                 .fetchOne(0, int.class);
     }
 
@@ -42,11 +41,12 @@ public class DatabaseRepository {
 
     public Database insert(UUID id, UUID userId, String name, String pgDatabaseName,
                            String pgUsername, String pgPasswordHash) {
+        // Omit STATUS – the DB default 'PROVISIONING' avoids jOOQ H2→PostgreSQL enum binding issues.
         dsl.insertInto(DATABASES)
                 .columns(DATABASES.ID, DATABASES.USER_ID, DATABASES.NAME,
                         DATABASES.PG_DATABASE_NAME, DATABASES.PG_USERNAME,
-                        DATABASES.PG_PASSWORD_HASH, DATABASES.STATUS)
-                .values(id, userId, name, pgDatabaseName, pgUsername, pgPasswordHash, PROVISIONING)
+                        DATABASES.PG_PASSWORD_HASH)
+                .values(id, userId, name, pgDatabaseName, pgUsername, pgPasswordHash)
                 .execute();
 
         // Fetch only the DB-generated timestamp columns to avoid jOOQ enum binding
@@ -66,17 +66,16 @@ public class DatabaseRepository {
     }
 
     public void updateStatus(UUID id, DatabaseStatus status, String failureReason) {
-        dsl.update(DATABASES)
-                .set(DATABASES.STATUS, dev.soupbase.db.generated.enums.DatabaseStatus.valueOf(status.name()))
-                .set(DATABASES.FAILURE_REASON, failureReason)
-                .set(DATABASES.UPDATED_AT, OffsetDateTime.now())
-                .where(DATABASES.ID.eq(id))
-                .execute();
+        // Use raw SQL cast – avoids jOOQ H2-generated enum binding issues with PostgreSQL custom types.
+        dsl.execute(
+                "UPDATE databases SET status = ?::database_status, failure_reason = ?, updated_at = NOW() WHERE id = ?",
+                status.name(), failureReason, id
+        );
     }
 
     public List<Database> findStuckInProvisioning(OffsetDateTime cutoff) {
         return dsl.selectFrom(DATABASES)
-                .where(DATABASES.STATUS.eq(PROVISIONING))
+                .where(DATABASES.STATUS.cast(String.class).eq("PROVISIONING"))
                 .and(DATABASES.CREATED_AT.lt(cutoff))
                 .fetch(DatabaseRepository::toDatabase);
     }
